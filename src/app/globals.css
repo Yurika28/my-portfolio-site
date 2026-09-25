@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Violet Ink palette (Contact section) */
+  --ink: #1b1330;
+  --muted: #4f4066;
+  --accent: #7c3aed;
+  --accent-soft: #efe4ff;
+  --card-border: rgba(124, 58, 237, 0.22);
+  --card-bg: rgba(255, 255, 255, 0.55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-archivo);
+  --font-serif-italic: var(--font-fraunces);
+  --font-script: var(--font-yellowtail), cursive;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
+}
+
+/* Animated background blobs: position/size/color here, motion driven by GSAP in AnimatedBackground.tsx */
+.bg-blob {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0.8;
+  filter: blur(60px);
+}
+
+.bg-blob-1 {
+  bottom: 0;
+  left: 5%;
+  height: 24rem;
+  width: 24rem;
+  background-image: linear-gradient(to bottom, #e2afff 15%, #deaaff 85%);
+}
+
+.bg-blob-2 {
+  top: 5%;
+  left: 8%;
+  height: 17rem;
+  width: 13rem;
+  background: linear-gradient(to bottom, #a2d2ff 15%, #bde0fe 85%);
+}
+
+.bg-blob-3 {
+  top: 15%;
+  right: 5%;
+  height: 18rem;
+  width: 19rem;
+  background: linear-gradient(to left, #ffc8dd 15%, #ffafcc 85%);
+}
+
+.bg-blob-4 {
+  bottom: 5%;
+  right: 8%;
+  height: 14rem;
+  width: 11rem;
+  background-image: linear-gradient(to bottom, #ffd60a 15%, #ffd60a 85%);
+}
