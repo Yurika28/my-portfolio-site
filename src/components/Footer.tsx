@@ -9,7 +9,7 @@ const TAGS = [
 
 export default function Footer() {
   return (
-    <footer className="mx-auto max-w-295 px-6 pb-10 pt-4 sm:pb-12 mb-6">
+    <footer className="mx-auto max-w-295 px-6 pb-12 pt-6 sm:pb-14 mb-8">
       <ul className="flex flex-wrap gap-3">
         {TAGS.map((tag) => (
           <li

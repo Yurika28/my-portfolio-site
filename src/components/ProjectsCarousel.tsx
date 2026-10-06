@@ -54,7 +54,16 @@ export default function ProjectsCarousel() {
     if (!section || !track) return;
 
     const nav = document.querySelector<HTMLElement>("nav");
-    let updateNavOpacity: (() => void) | null = null;
+    let navVisible = true;
+
+    // Single crossfade entry point for nav visibility — both the carousel
+    // index and the Contact section's ScrollTrigger below call this, each
+    // only triggering a tween when the desired state actually changes.
+    const setNavVisible = (visible: boolean) => {
+      if (!nav || visible === navVisible) return;
+      navVisible = visible;
+      gsap.to(nav, { autoAlpha: visible ? 1 : 0, duration: 0.4, ease: "power1.out" });
+    };
 
     const ctx = gsap.context(() => {
       const getMaxScroll = () => track.scrollWidth - section.offsetWidth;
@@ -82,54 +91,34 @@ export default function ProjectsCarousel() {
           onUpdate: (self) => {
             const index = Math.round(getHorizontalProgress(self.progress) * (PROJECTS.length - 1));
             setActiveIndex(index);
+            // Only the final card clashes visually with the nav, so it hides
+            // there and stays hidden through Contact — the footer trigger
+            // below is what brings it back, at the very bottom of the page.
+            setNavVisible(index < PROJECTS.length - 1);
           },
         },
       });
 
       stRef.current = tween.scrollTrigger ?? null;
 
-      // Fade the fixed nav out while the last slide clears un-pin, then back in
-      // once the page has scrolled a bit past it — driven directly off raw scroll
-      // position (rather than this trigger's own progress/enter-leave events,
-      // which don't fire reliably once scroll moves past its end) so it keeps
-      // working correctly however the user scrolls past that point.
-      if (nav) {
-        updateNavOpacity = () => {
-          const st = stRef.current;
-          if (!st) return;
-          const restBuffer = getRestBuffer();
-          const fadeOutStart = st.end - restBuffer;
-          const fadeOutEnd = st.end;
-          const fadeInEnd = st.end + restBuffer;
-          const y = window.scrollY;
-          let opacity = 1;
-          if (y > fadeOutStart && y <= fadeOutEnd) {
-            opacity = 1 - (y - fadeOutStart) / restBuffer;
-          } else if (y > fadeOutEnd && y <= fadeInEnd) {
-            opacity = (y - fadeOutEnd) / restBuffer;
-          } else if (y > fadeOutEnd) {
-            opacity = 1;
-          } else if (y > fadeOutStart) {
-            opacity = 0;
-          }
-          gsap.set(nav, { autoAlpha: opacity });
-        };
-
-        // Native scroll event (Lenis keeps the document's real scroll position in
-        // sync, confirmed via documentElement.scrollTop) rather than window.__lenis's
-        // own event or gsap's rAF ticker — both of those depend on something that
-        // may not be ready/running yet at the moment this effect mounts.
-        window.addEventListener("scroll", updateNavOpacity, { passive: true });
-        updateNavOpacity();
-      }
+      // Nav reappears only once the page is scrolled all the way to the
+      // bottom, and hides again if the user scrolls back up away from it.
+      // Lenis' own `limit` is the real max scroll — the carousel's pin-spacer
+      // makes the raw document height (and thus ScrollTrigger.maxScroll)
+      // overshoot it, which would make a DOM-based trigger unreachable.
+      const getMaxDocScroll = () => window.__lenis?.limit ?? ScrollTrigger.maxScroll(window);
+      ScrollTrigger.create({
+        start: () => getMaxDocScroll() - 1,
+        end: () => getMaxDocScroll(),
+        onEnter: () => setNavVisible(true),
+        onEnterBack: () => setNavVisible(true),
+        onLeaveBack: () => setNavVisible(false),
+      });
     }, section);
 
     return () => {
       ctx.revert();
-      if (nav && updateNavOpacity) {
-        window.removeEventListener("scroll", updateNavOpacity);
-        gsap.set(nav, { clearProps: "opacity,visibility" });
-      }
+      if (nav) gsap.set(nav, { clearProps: "opacity,visibility" });
     };
   }, []);
 
@@ -158,7 +147,7 @@ export default function ProjectsCarousel() {
         {PROJECTS.map((project) => (
           <article
             key={project.slug}
-            className="flex h-full w-screen shrink-0 items-center px-0 pt-24 sm:px-1 sm:pt-28 md:px-3 md:pt-32"
+            className="flex h-full w-screen shrink-0 items-center px-1 pt-24 sm:pt-28 md:pt-32"
           >
             <div className="grid w-full max-w-6xl grid-cols-1 items-center gap-6 rounded-3xl border border-white/30 bg-white/10 p-4 shadow-xl shadow-black/5 backdrop-blur-xl sm:gap-8 sm:p-6 md:grid-cols-2 md:gap-10 md:p-10 dark:border-white/10 dark:bg-white/5">
               <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-neutral-200 dark:bg-neutral-800">
